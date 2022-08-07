@@ -58,8 +58,9 @@ pub fn derive(input: TokenStream) -> TokenStream {
         stream_pair.iter().map(|(ident, ty, varname)| {
             quote::quote! {
                 impl OptionBuilderT {
-                    fn #ident(&mut self, input: #ty) -> () {
+                    fn #ident(&mut self, input: #ty) -> &mut OptionBuilderT {
                         self.#varname = Some(input);
+                        self
                     }
                 }
             }
@@ -68,7 +69,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
 
     let build_stream = create_stream(
         stream_pair.iter().map(|(ident, _ty, varname)| {
-            quote::quote! { #ident: self.#varname.unwrap().clone(), }
+            quote::quote! { #ident: self.#varname.as_ref().unwrap().clone(), }
         }).collect()
     );
 
@@ -100,7 +101,7 @@ pub fn derive(input: TokenStream) -> TokenStream {
         #method_stream
 
         impl OptionBuilderT {
-            fn build(self) -> Option<BuilderT> {
+            fn build(&self) -> Option<BuilderT> {
                 return Some(BuilderT{
                     #build_stream
                 });
